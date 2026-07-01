@@ -1,4 +1,6 @@
-import { eq, desc } from "drizzle-orm";
+// src/modules/auth/auth.repository.ts
+
+import { eq, desc, isNotNull } from "drizzle-orm";
 import { db } from "../../database/client";
 import { users } from "../../database/schema/schema";
 
@@ -60,31 +62,23 @@ export class AuthRepository {
   }
 
   async completeSignup(
-    data: {
-      email: string;
-      userUid: string;
-      firstName: string;
-      lastName: string;
-      accountType: "Admin" | "Driver" | "Vehicle Owner" | "User";
-      isEmailVerified: boolean;
-    },
+    data: { email: string; userUid: string; accountType: any; isEmailVerified: boolean },
     tx?: TransactionClient
-  ) {
+  ): Promise<any> {
     const client = this.getClient(tx);
-    const result = await client
+    
+    const [updatedUser] = await client
       .update(users)
       .set({
         userUid: data.userUid,
-        firstName: data.firstName,
-        lastName: data.lastName,
         accountType: data.accountType,
         isEmailVerified: data.isEmailVerified,
-        otp: null,
-        otpExpiresAt: null,
+        updatedAt: new Date()
       })
       .where(eq(users.email, data.email))
       .returning();
-    return result[0];
+
+    return updatedUser;
   }
 
   async getLastUserUid(tx?: TransactionClient): Promise<string | null> {
@@ -92,6 +86,7 @@ export class AuthRepository {
     const result = await client
       .select({ userUid: users.userUid })
       .from(users)
+      .where(isNotNull(users.userUid)) // 💡 Ensure we only check rows that have a UID
       .orderBy(desc(users.userUid))
       .limit(1);
 

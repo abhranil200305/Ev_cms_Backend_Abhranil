@@ -1,8 +1,8 @@
 export interface VerifySignupOtpDto {
     email: string;
     otp: string;
-    firstName: string;
-    lastName: string;
+   // firstName: string;
+    //lastName: string;
     accountType: "User" | "Driver" | "Vehicle Owner";
 }
 
